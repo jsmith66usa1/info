@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Learning Experience AI - Full Screen Slide Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* 1. FULL SCREEN CORE SETUP */
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            overflow: hidden;
+            font-family: 'Lato', sans-serif;
+        }
+
+        #presentation-viewport {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: #ffffff;
+            display: none; /* Controlled by JS */
+            flex-direction: column;
+            padding: 5vh 8vw;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .slide-container.active {
+            display: flex;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Decorative Branding Elements */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: -10vh;
+            right: -10vw;
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, rgba(36, 120, 125, 0.08) 0%, transparent 70%);
+            z-index: 0;
+        }
+
+        .slide-container::after {
+            content: '';
+            position: absolute;
+            bottom: 4vh;
+            left: 8vw;
+            width: 10vw;
+            height: 8px;
+            background-color: #24787d; /* LEXP Teal */
+            z-index: 1;
+        }
+
+        .slide-container > * {
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 2. RESPONSIVE TYPOGRAPHY */
+        h1 { 
+            font-size: clamp(3rem, 8vh, 6rem); 
+            font-family: 'Poppins', sans-serif;
+            font-weight: 700; 
+            line-height: 1.1; 
+            color: #24787d;
+            margin: 0;
+        }
+
+        .slide-title { 
+            font-size: clamp(2rem, 5vh, 4rem); 
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600; 
+            margin-bottom: 4vh; 
+            border-left: 12px solid #24787d; 
+            padding-left: 20px; 
+            letter-spacing: 1px; 
+            color: #1e293b;
+        }
+
+        p, li { 
+            font-size: clamp(1.2rem, 2.5vh, 2rem); 
+            line-height: 1.5; 
+            color: #475569; 
+        }
+
+        h3 {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(1.5rem, 3.5vh, 2.5rem);
+            color: #0f172a;
+            margin-bottom: 2vh;
+        }
+
+        /* 3. NAVIGATION */
+        .nav-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 40px;
+            display: flex;
+            gap: 15px;
+            z-index: 9999;
+        }
+
+        .nav-btn {
+            background-color: #24787d;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-family: 'Poppins';
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 15px 35px;
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 20px rgba(36, 120, 125, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn:hover { background-color: #1a5c60; transform: translateY(-3px); }
+        .nav-btn:disabled { background-color: #cbd5e1; cursor: not-allowed; box-shadow: none; opacity: 0.5; }
+        .nav-btn.prev { background-color: #475569; box-shadow: 0 10px 20px rgba(71, 85, 105, 0.2); }
+
+        /* 4. LAYOUTS */
+        .content-area { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; width: 100%; }
+        .two-column { display: grid; grid-template-columns: 1.2fr 1fr; gap: 5vw; align-items: center; width: 100%; }
+
+        .image-wrapper { 
+            border-radius: 24px; 
+            overflow: hidden; 
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1); 
+            border: 1px solid #e2e8f0; 
+            height: 60vh;
+            width: 100%;
+        }
+        .image-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .btn-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 1.2rem 2.5rem;
+            background-color: #24787d;
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-family: 'Poppins';
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-top: 2vh;
+            transition: 0.2s;
+        }
+
+        .dashboard-grid { 
+            display: grid; 
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            width: 100%; 
+        }
+
+        .dash-item { 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            justify-content: center;
+            gap: 10px; 
+            background: #f8fafc; 
+            padding: 2vh; 
+            border-radius: 16px; 
+            border: 1px solid #e2e8f0; 
+            text-decoration: none; 
+            color: inherit; 
+            transition: 0.2s; 
+            text-align: center;
+        }
+        .dash-item:hover { border-color: #24787d; background: #ffffff; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .dash-item i { font-size: 1.8rem; color: #24787d; }
+        .dash-item span { font-weight: 700; font-family: 'Poppins'; font-size: 0.9rem; }
+
+        .section-header { 
+            background-color: #1e293b; 
+            color: white; 
+            text-align: center; 
+            justify-content: center; 
+        }
+        .section-header h2 { color: white; font-size: 10vh; margin: 0; }
+        .section-header hr { width: 15vw; height: 10px; background: #24787d; border: none; margin: 5vh auto; border-radius: 20px; }
+
+        .tile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3vw; }
+        .tile { padding: 4vh; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 32px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.02); }
+        .tile i { font-size: 4rem; color: #24787d; margin-bottom: 3vh; }
+
+        table { width: 100%; border-collapse: collapse; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.05); }
+        th { background-color: #1e293b; color: white; padding: 3vh; text-align: left; font-family: 'Poppins'; font-size: 1.5rem; }
+        td { padding: 2.5vh; border-bottom: 1px solid #e2e8f0; font-size: 1.3rem; }
+        tr:nth-child(even) { background-color: #f8fafc; }
+    </style>
+</head>
+<body>
+
+<div id="presentation-viewport">
+
+    <!-- Slide 1: Title Slide -->
+    <div class="slide-container active" id="slide0">
+        <div class="content-area" style="align-items: center; text-align: center;">
+            <img src="lexp_logo.jpg" alt="Logo" style="width: 35vw; max-width: 600px; border-radius: 40px; box-shadow: 0 40px 80px rgba(0,0,0,0.2); margin-bottom: 5vh;" onerror="this.src='https://via.placeholder.com/600x400?text=THE+LEARNING+EXPERIENCE+AI'">
+            <h1>The Learning Experience AI</h1>
+            <p style="margin-top: 3vh; max-width: 60vw;">The Global Digital Ecosystem for Inquiry-Based Intelligence.</p>
+        </div>
+    </div>
+
+    <!-- Slide 2: Platform / Website Hub -->
+    <div class="slide-container" id="slide1">
+        <h2 class="slide-title">lexp-online.com Platform</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>The primary digital command center for our global network. <strong>lexp-online.com</strong> unifies content delivery, user analytics, and social learning.</p>
+                    <ul style="margin-top: 3vh;">
+                        <li style="margin-bottom: 2vh;">Secure Cloud-Native Infrastructure</li>
+                        <li style="margin-bottom: 2vh;">Global Module Distribution</li>
+                        <li style="margin-bottom: 2vh;">Personal Master Dashboards</li>
+                    </ul>
+                    <a href="https://lexp-online.com/" target="_blank" class="btn-link"><i class="fa-solid fa-globe"></i> Visit Platform</a>
+                </div>
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1531297484001-80022131f5a1?auto=format&fit=crop&q=80&w=1200" alt="Tech Dashboard">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 3: What We Do -->
+    <div class="slide-container" id="slide2">
+        <h2 class="slide-title">Mission Overview: What We Do</h2>
+        <div class="content-area">
+            <div class="tile-grid">
+                <div class="tile">
+                    <i class="fa-solid fa-bolt"></i>
+                    <h3>Rapid Engagement</h3>
+                    <p>Winning student attention through the LEXP Song and Viral Reels.</p>
+                </div>
+                <div class="tile">
+                    <i class="fa-solid fa-brain"></i>
+                    <h3>AI Mentorship</h3>
+                    <p>1-on-1 discovery with history's greatest minds: Einstein and Lincoln.</p>
+                </div>
+                <div class="tile">
+                    <i class="fa-solid fa-calculator"></i>
+                    <h3>STEM Mastery</h3>
+                    <p>Full curriculum paths for Algebra 1, 2, and Calculus.</p>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 5vh;">
+                <a href="https://jsmith66usa1.github.io/Lexp/" target="_blank" class="btn-link"><i class="fa-solid fa-rocket"></i> Explore Mission</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 4: Albert AI (Einstein) -->
+    <div class="slide-container" id="slide3">
+        <h2 class="slide-title">Einstein's Universe: AI Mentorship</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <h3>Dialogue with Genius</h3>
+                    <p>Ask complex physics questions to a simulated <strong>Digital Twin of Albert Einstein</strong>. Our conversational AI enables discovery at scale.</p>
+                    <div style="background: #f1f5f9; padding: 3vh; border-radius: 20px; margin-top: 3vh; border-left: 10px solid #24787d; font-style: italic;">
+                        "Don't just read about relativity—ask Einstein how it works."
+                    </div>
+                    <a href="https://jsmith66usa1.github.io/launchablert/" target="_blank" class="btn-link"><i class="fa-solid fa-brain"></i> Ask Albert</a>
+                </div>
+                <div class="image-wrapper" style="border-radius: 50%; width: 35vw; height: 35vw; max-width: 500px; max-height: 500px; margin: 0 auto; border: 15px solid #24787d;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/d/d3/Albert_Einstein_Head.jpg" alt="Albert Einstein Portrait">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 5: Honest Abe AI (Lincoln) -->
+    <div class="slide-container" id="slide4">
+        <h2 class="slide-title">Honest Abe: Historical Inquiry</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div class="image-wrapper" style="height: 60vh; width: 30vw; max-width: 450px; margin: 0 auto; border-radius: 30px; border: 12px solid #1e293b;">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/a/ab/Abraham_Lincoln_O-77_matte_collodion_print.jpg" alt="Abraham Lincoln Portrait">
+                </div>
+                <div>
+                    <h3>Presidential Consultation</h3>
+                    <p>Experience American History through the eyes of the 16th President. Our <strong>Abraham Lincoln AI</strong> mentor provides deep context on leadership and ethics.</p>
+                    <a href="https://jsmith66usa1.github.io/Lexp/abe.html" target="_blank" class="btn-link" style="background-color: #1e293b;"><i class="fa-solid fa-landmark"></i> Consult with Abe</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 6: STEM Mastery -->
+    <div class="slide-container" id="slide5">
+        <h2 class="slide-title">STEM Mastery: The Math Suite</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 4vh;"><i class="fa-solid fa-calculator" style="color:#24787d; margin-right: 20px; font-size: 2.5rem;"></i> <strong>Algebra 1:</strong> <a href="https://jsmith66usa1.github.io/Algebra1/" target="_blank">Launch Path</a></li>
+                        <li style="margin-bottom: 4vh;"><i class="fa-solid fa-superscript" style="color:#24787d; margin-right: 20px; font-size: 2.5rem;"></i> <strong>Algebra 2:</strong> <a href="https://jsmith66usa1.github.io/Algebra2/" target="_blank">Launch Path</a></li>
+                        <li style="margin-bottom: 4vh;"><i class="fa-solid fa-infinity" style="color:#24787d; margin-right: 20px; font-size: 2.5rem;"></i> <strong>Calculus:</strong> <a href="https://jsmith66usa1.github.io/calculus/" target="_blank">Launch Path</a></li>
+                    </ul>
+                </div>
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&q=80&w=1200" alt="Math Blackboard">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 7: Learning Games -->
+    <div class="slide-container" id="slide6">
+        <h2 class="slide-title">Interactive Learning Games</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>Gamifying the educational journey. Our <strong>Winter Games</strong> suite turns complex sports and logic puzzles into immersive learning experiences.</p>
+                    <ul style="margin-top: 3vh;">
+                        <li style="margin-bottom: 2vh;">Strategic Logic Challenges</li>
+                        <li style="margin-bottom: 2vh;">Physics-Based Sport Simulations</li>
+                        <li style="margin-bottom: 2vh;">Inquiry-Driven Gameplay</li>
+                        <li style="margin-bottom: 2vh; color: #24787d; font-weight: 700;">More Learning Games coming soon!</li>
+                    </ul>
+                    <a href="https://winter-games-sport-spotter-538914696512.us-west1.run.app/" target="_blank" class="btn-link"><i class="fa-solid fa-gamepad"></i> Play Learning Games</a>
+                </div>
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=1200" alt="Retro Gaming and Logic">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 8: Community / Meetup -->
+    <div class="slide-container" id="slide7">
+        <h2 class="slide-title">Community: Social Learning Layer</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>Learning is a social endeavor. Through our <strong>Meetup Community</strong>, we unify students and innovators to explore the LEXP universe together.</p>
+                    <a href="https://www.meetup.com/the-learning-experience/" target="_blank" class="btn-link"><i class="fa-brands fa-meetup"></i> Join Meetup Group</a>
+                </div>
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&q=80&w=1200" alt="Community Networking">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 9: Section Header: Hooks -->
+    <div class="slide-container section-header" id="slide8">
+        <div class="content-area">
+            <h2>THE HOOKS</h2>
+            <hr>
+            <p>Engaging the multi-sensory mind at scale.</p>
+        </div>
+    </div>
+
+    <!-- Slide 10: The Song -->
+    <div class="slide-container" id="slide9">
+        <h2 class="slide-title">Mnemonic Power: The LEXP Song</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div>
+                    <p>Music is the ultimate cognitive anchor. Our high-energy <strong>Learning Experience Song</strong> anchors core academic concepts in memory.</p>
+                    <a href="https://www.facebook.com/1438756983/videos/1999874874207682/" target="_blank" class="btn-link"><i class="fa-brands fa-facebook"></i> Experience the Song</a>
+                </div>
+                <div class="image-wrapper">
+                    <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&q=80&w=1200" alt="Song Performance Stage">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 11: The Movie (Reels) -->
+    <div class="slide-container" id="slide10">
+        <h2 class="slide-title">Visual Storytelling: The Movie</h2>
+        <div class="content-area">
+            <div class="two-column">
+                <div class="image-wrapper" style="width: 25vw; height: 60vh; max-width: 350px; margin: 0 auto;">
+                    <img src="https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800" alt="Smartphone Reel">
+                </div>
+                <div>
+                    <h3>Viral Micro-Learning</h3>
+                    <p>Meeting students where they are. Our <strong>Viral LEXP Reels</strong> provide cinematic context for abstract curriculum.</p>
+                    <a href="https://www.facebook.com/reel/2274258896714910" target="_blank" class="btn-link" style="background-color: #1e293b;"><i class="fa-solid fa-play"></i> Watch Movie / Reel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide 12: Final Dashboard -->
+    <div class="slide-container" id="slide11">
+        <h2 class="slide-title">Interactive Portfolio Dashboard</h2>
+        <div class="content-area">
+            <div class="dashboard-grid">
+                <a href="https://lexp-online.com/" target="_blank" class="dash-item"><i class="fa-solid fa-globe"></i><span>LEXP Platform</span></a>
+                <a href="https://jsmith66usa1.github.io/Lexp/" target="_blank" class="dash-item"><i class="fa-solid fa-rocket"></i><span>What We Do</span></a>
+                <a href="https://jsmith66usa1.github.io/Lexp/abe.html" target="_blank" class="dash-item"><i class="fa-solid fa-landmark"></i><span>Abe Lincoln AI</span></a>
+                <a href="https://jsmith66usa1.github.io/launchablert/" target="_blank" class="dash-item"><i class="fa-solid fa-brain"></i><span>Einstein AI</span></a>
+                <a href="https://jsmith66usa1.github.io/Algebra1/" target="_blank" class="dash-item"><i class="fa-solid fa-calculator"></i><span>Algebra 1</span></a>
+                <a href="https://jsmith66usa1.github.io/Algebra2/" target="_blank" class="dash-item"><i class="fa-solid fa-superscript"></i><span>Algebra 2</span></a>
+                <a href="https://jsmith66usa1.github.io/calculus/" target="_blank" class="dash-item"><i class="fa-solid fa-infinity"></i><span>Calculus</span></a>
+                <a href="https://winter-games-sport-spotter-538914696512.us-west1.run.app/" target="_blank" class="dash-item"><i class="fa-solid fa-gamepad"></i><span>Learning Games</span></a>
+                <a href="https://www.facebook.com/1438756983/videos/1999874874207682/" target="_blank" class="dash-item"><i class="fa-solid fa-music"></i><span>The Song</span></a>
+                <a href="https://www.facebook.com/reel/2274258896714910" target="_blank" class="dash-item"><i class="fa-solid fa-film"></i><span>The Movie</span></a>
+                <a href="https://www.meetup.com/the-learning-experience/" target="_blank" class="dash-item" style="grid-column: span 2;"><i class="fa-brands fa-meetup"></i><span>Meetup Community</span></a>
+            </div>
+            <div style="text-align: center; margin-top: 5vh; opacity: 0.6;">
+                <p>The Learning Experience AI &copy; 2024. Building the Future of Inquiry.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVIGATION OVERLAY -->
+    <div class="nav-controls">
+        <button class="nav-btn prev" id="prevBtn" onclick="changeSlide(-1)"><i class="fa-solid fa-chevron-left"></i> PREV</button>
+        <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">NEXT <i class="fa-chevron-right"></i></button>
+    </div>
+
+</div>
+
+<script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide-container');
+
+    function changeSlide(direction) {
+        slides[currentSlide].classList.remove('active');
+        currentSlide = (currentSlide + direction + slides.length) % slides.length;
+        slides[currentSlide].classList.add('active');
+        updateNav();
+    }
+
+    function updateNav() {
+        document.getElementById('prevBtn').disabled = (currentSlide === 0);
+        document.getElementById('nextBtn').innerHTML = (currentSlide === slides.length - 1) ? 'RESTART <i class="fa-solid fa-rotate-right"></i>' : 'NEXT <i class="fa-solid fa-chevron-right"></i>';
+    }
+
+    // Keyboard navigation
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') changeSlide(1);
+        if (e.key === 'ArrowLeft') changeSlide(-1);
+    });
+
+    // Touch support (Simple swipe)
+    let touchstartX = 0;
+    let touchendX = 0;
+    
+    document.addEventListener('touchstart', e => {
+        touchstartX = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', e => {
+        touchendX = e.changedTouches[0].screenX;
+        handleGesture();
+    });
+
+    function handleGesture() {
+        if (touchendX < touchstartX - 50) changeSlide(1);
+        if (touchendX > touchstartX + 50) changeSlide(-1);
+    }
+
+    updateNav();
+</script>
+
+</body>
+</html>
